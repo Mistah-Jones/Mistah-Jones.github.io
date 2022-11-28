@@ -3310,6 +3310,20 @@ input, select, textarea {
 
 		}
 
+		/* PDF */
+
+		#pdf_container {
+			position: relative;
+			width: 100%;
+			padding-bottom: 100%;
+		  }
+		  
+		  #pdf {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+		  }
+
 /* Wrapper */
 
 	#wrapper > * > .inner {
