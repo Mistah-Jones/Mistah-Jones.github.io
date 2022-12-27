@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-	<title>Health Quest</title>
+	<title>Resistance Arena</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
@@ -40,93 +40,111 @@
 				<!-- Main -->
 					<div id="main">
 						<div class="inner">
-							<h1>Health Quest <img style="width:2.609em; height:1em; margin-left:1em;" src="images/Unity_Technologies_logo.png" alt=""> </h1> 
-							<span class="image main"><img src="images/HealthQuestBanner.PNG" alt="" /></span>
+							<h1>Resistance Arena <img style="width:2.609em; height:1em; margin-left:1em;" src="images/Unity_Technologies_logo.png" alt=""> </h1> 
+							<!--<span class="image main"><img src="images/HealthQuestBanner.PNG" alt="" /></span>-->
 							<p>
-								What began as my computer science capstone project eventually became my largest and award-winning personal game project. 
-								Health Quest is a mobile RPG game where the user attacks monsters and levels up by performing and logging exercises in the application.
+								Resistance Arena is a VR game where the user attacks by performing upper body exercises with VR controllers instead of 
+								pressing buttons. A machine learning algorithm determines if you have performed a given exercise, and gives a score
+								based on how correct the form was.
 							</p>
 						<br/>
 						<h2>Technologies</h2>
 							<li>Unity</li>
 							<li>C#</li>
-							<li>AWS (Lambda, Cognito, API Gateway)</li>
-							<li>SQL</li>
-							<li>Photoshop</li>
 						<br/>
 						<h2>My Role</h2>
 						<p>
-							<li>Team Lead</li>
-							<li>Gameplay</li>
-							<li>Game Design</li>
-							<li>Core Features</li>
-							This began as my idea that I pitched to a small group of developers, that I went on to become the team 
-							lead for. I was in charge of the applications game design, core gameplay, UI/UX design, and all administrative tasks. 
-							I was able to facilitate communication across the team for the entire two semesters, and ensure that we always had a 
-							stable build ready to present and play test.
+							<li>Sole Developer</li>
+							This project required a very strong understanding of 3D math for creating realistic physics-based gameplay
+							with a VR headset. This required the use of quaternion math, physics, and matrix transformations between spaces
 						</p>
 						<h2>Media</h2>
 						<h3>&nbsp Screenshots</h3>
 						<section class="tiles" style="margin-top: -6em;">
-							<article class="style4" style="width: 10em;">
+							<article class="style4" style="width: 25em;">
 								<span class="image">
-									<img src="images/HQ_SoloBattle.PNG" alt=""/>
+									<img src="images/RA_Menu.png" alt=""/>
 								</span>
 								<a>
 									<div class="content">
 										<p>
-											The Player attacks an enenmy once an exericse has 
-											been logged in the application. Defeating the enemy awards experience to level up
+											The VR Menu navigation
 										</p>
 									</div>
 								</a>
 							</article>
-							<article class="style5" style="width: 10em;">
+							<article class="style4" style="width: 25em;">
 								<span class="image">
-									<img src="images/HQ_Stats.PNG" alt="" />
+									<img src="images/RA_PlayerArm.png" alt=""/>
 								</span>
 								<a>
 									<div class="content">
 										<p>
-											The menu that displays both a player's level / experience and also their weight lifting and run time
-											progress over time.
+											The arm and ray-cast pointer used to interact with the menu 
 										</p>
 									</div>
 								</a>
 							</article>
-							<article class="style5" style="width: 10em;">
+							<article class="style4" style="width: 25em;">
 								<span class="image">
-									<img src="images/HQ_Character.PNG" alt="" />
+									<img src="images/RA_Fireball.png" alt=""/>
 								</span>
 								<a>
 									<div class="content">
 										<p>
-											The menu where the player can customize their character
+											The "Fireball" attack cast by performing a bicep curl with one hand
+										</p>
+									</div>
+								</a>
+							</article>
+							<article class="style5" style="width: 25em;">
+								<span class="image">
+									<img src="images/RA_FireballHit.png" alt="" />
+								</span>
+								<a>
+									<div class="content">
+										<p>
+											The "Fireball" attack colliding with a target practice crate
+										</p>
+									</div>
+								</a>
+							</article>
+							<article class="style5" style="width: 25em;">
+								<span class="image">
+									<img src="images/RA_RockThrow.png" alt="" />
+								</span>
+								<a>
+									<div class="content">
+										<p>
+											The "Rock Throw" attack cast by performing an overhead press with both hands
+										</p>
+									</div>
+								</a>
+							</article>
+							<article class="style5" style="width: 25em;">
+								<span class="image">
+									<img src="images/RA_RockHit.png" alt="" />
+								</span>
+								<a>
+									<div class="content">
+										<p>
+											The "Rock Throw" attack hitting the ground and producing an AOE attack
 										</p>
 									</div>
 								</a>
 							</article>
 						</section>
 						<br/>
-						<h3>&nbsp Gameplay Videos</h3>
+						<h3>&nbsp Gameplay Video</h3>
 						<div style="margin: auto; width: 50%;">
-							<video width="569" height="320" controls src="Videos/GameExample.mp4" type="video/mp4">
-							</video>
-							<video width="569" height="320" controls src="Videos/SocialWalkThrough.mp4" type="video/mp4">
+							<video width="569" height="320" controls src="Videos/ResistanceArenaDemoVideo_1.mp4" type="video/mp4">
 							</video>
 						</div>
 						<br/>
 						<br/>
 						<br/>
-						<h2>Kalhert Innovation Exploration Competition</h2>
-						<p>
-							In April of 2022 I prepared a pitch and entered the annual Innovation Exploration Competition hosted by the Kalhert Initiative. 
-							Health Quest's game design and core idea was successful enough to place in the top 5 winners of the competition. Learn more about the competition <a href="https://eccles.utah.edu/innovation-exploration/?utm_source=none&utm_medium=eccleslink">HERE</a>
-						</p>
 						<h2>Code</h2>
-						<p>
-							Please email with requests for access to the private repository!
-						</p>
+						See the code repository <a href="https://github.com/Mistah-Jones/ResistanceArena">HERE</a>
 						</div>
 					</div>
 
