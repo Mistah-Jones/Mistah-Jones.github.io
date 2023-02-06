@@ -130,8 +130,436 @@
 						</p>
 						<h2>Code</h2>
 						<p>
-							Please email with requests for access to the private repository!
-						</p>
+							<div style="width: 90%; margin: auto;">The code responsible for calculating how much damage a player does to a monster based on the effectiveness of their most recent exercise. This C# code makes great use of LINQ methods and is a good show of unique and non-traditional gameplay engineering</div>
+
+							<button type="button" class="collapsible">Damage Calculation Code</button>
+							<div id="sample1" class="code-content">
+								<pre>
+									<code>
+/// &ltsummary>
+/// Helper method that calculates the damage to be done for a user's most recent exercise session
+/// &lt/summary>
+/// &ltreturns>&lt/returns>
+private int CalculateDamage(DateTime lastCheckDate)
+{
+	// Compare a user's most recently logged exercise session against their history to calculate
+	// damage based on performance within the last month
+	int damage = 0;
+
+	var exerciseString = queryInstance.GetLastMonth(userNum);
+	var allExercisesGrouped = JsonConvert.DeserializeObject&ltExercisesByMuscleGroup>(exerciseString);
+	var allExercises = new List&ltExerciseWithID>();
+	allExercises.AddRange(allExercisesGrouped.Abs);
+	allExercises.AddRange(allExercisesGrouped.Back);
+	allExercises.AddRange(allExercisesGrouped.Biceps);
+	allExercises.AddRange(allExercisesGrouped.Chest);
+	allExercises.AddRange(allExercisesGrouped.Legs);
+	allExercises.AddRange(allExercisesGrouped.Shoulders);
+
+	// 1: How many times has the user exercised within the last 7 days?
+	damage += WeeklyExerciseCountDamage(allExercises);
+
+	// 2: How much did the weight increase for repeat exercises?
+	// 3: How many new exercises did the user do?
+	damage += WeightIncreaseAndNewExerciseDamage(allExercises, lastCheckDate);
+
+	// 4: How many unique exercises did the user complete in their most recent session?
+	damage += UniqueExerciseDamage(allExercises, lastCheckDate);
+
+	// 5: How many muscle groups has the user worked in the last 10 days?
+	damage += MuscleGroupDamage(allExercisesGrouped);
+
+	return damage;
+}
+
+/// &ltsummary>
+/// Helper method to calculate the damage from the number of workouts a user has logged in the past week
+/// &lt/summary>
+/// &ltparam name="allExercises">All exercises the user has done in the past month&lt/param>
+/// &ltreturns>The damage&lt/returns>
+private int WeeklyExerciseCountDamage(List&ltExerciseWithID> allExercises)
+{
+	var damage = 0;
+	var exerciseCount = allExercises
+		.GroupBy(ex => ex.Date)
+		.Where(date => DateTime.Parse(date.Key) >= DateTime.Now.AddDays(-7)).Count();
+	switch (exerciseCount)
+	{
+		case 1:
+			break;
+		case 2:
+			damage += 100;
+			break;
+		case 3:
+			damage += 300;
+			break;
+		case 4:
+			damage += 600;
+			break;
+		case 5:
+			damage += 650;
+			break;
+		case 6:
+			damage += 675;
+			break;
+		case 7:
+			damage += 700;
+			break;
+		case 8:
+			damage += 600;
+			break;
+		case 9:
+			damage += 400;
+			break;
+		case 10:
+			damage += 100;
+			break;
+		case 11:
+			damage += 50;
+			break;
+		default:
+			break;
+	}
+	return damage;
+}
+
+/// &ltsummary>
+/// Helper method to calculate the damage for the number of new exercises (within the last 2 weeks) that
+/// a user has completed since the last update, and the damage calculated from increasing weight on exercises.
+/// &lt/summary>
+/// &ltparam name="allExercises">All exercises the user has done in the past month&lt/param>
+/// &ltparam name="lastCheckDate">The last date that the user checked the venture forth page&lt/param>
+/// &ltreturns>&lt/returns>
+private int WeightIncreaseAndNewExerciseDamage(List&ltExerciseWithID> allExercises, DateTime lastCheckDate)
+{
+	var damage = 0;
+	var thisSessonExercises = allExercises
+		.Where(ex => DateTime.Parse(ex.Date) > lastCheckDate)
+		.GroupBy(ex => ex.ExID)
+		.ToList();
+
+	foreach (var exercise in thisSessonExercises)
+	{
+		// We first need to consolidate the total weight lifted for the case that a user logged the same exercise more
+		// than once in a single session (when using different sets, reps, or weights or a given exercise)
+		var totalWeight = 0;
+		var exId = exercise.First().ExID;
+		if (exercise.Key > 1)
+		{
+			foreach (var dupEx in exercise)
+			{
+				totalWeight += (dupEx.Sets * dupEx.Reps * dupEx.Weight);
+			}
+		}
+		else
+		{
+			totalWeight += (exercise.First().Sets * exercise.First().Reps * exercise.First().Weight);
+		}
+		// First check if the exercise has been done in the last two weeks (Not including the most recent session):
+		var previousExCount = allExercises
+			.Where(ex =>
+				ex.ExID == exId
+				&& (DateTime.Parse(ex.Date) &lt lastCheckDate)
+				&& (DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-14)))
+			.Count();
+		if (previousExCount == 0)
+		{
+			damage += 100;
+		}
+		else
+		{
+			// Get the most recent weight amount for this exercise
+			var previousEx = allExercises
+				.Where(ex => ex.ExID == exId && (DateTime.Parse(ex.Date) &lt lastCheckDate))
+				.GroupBy(ex => ex.Date)
+				.FirstOrDefault();
+			// Loop for the case that a user logged the same exercise more than once in a single session (when using different
+			// sets, reps, or weights or a given exercise)
+			var previousWeightLifted = 0;
+			foreach (var preEx in previousEx)
+			{
+				previousWeightLifted += (preEx.Reps * preEx.Sets * preEx.Weight);
+			}
+			var percentChange = (totalWeight - previousWeightLifted) / (double)previousWeightLifted;
+			if (percentChange > 0)
+			{
+				var tempDamage = 300 * Math.Pow(percentChange, 0.1);
+				if (tempDamage > 300)
+				{
+					tempDamage = 300;
+				}
+				damage += (int)tempDamage;
+			}
+		}
+	}
+
+	return damage;
+}
+
+/// &ltsummary>
+/// Helper method to calculate the damage for every unique exercise the user has performed
+/// since their last check of the battle page
+/// &lt/summary>
+/// &ltparam name="allExercises">All exercises the user has done in the past month&lt/param>
+/// &ltparam name="lastCheckDate">The last date that the user checked the venture forth page&lt/param>
+/// &ltreturns>&lt/returns>
+private int UniqueExerciseDamage(List&ltExerciseWithID> allExercises, DateTime lastCheckDate)
+{
+	var uniqueExerciseCount = allExercises
+		.Where(ex => DateTime.Parse(ex.Date) > lastCheckDate)
+		.GroupBy(ex => ex.ExID).Count();
+	var damage = 50 + (uniqueExerciseCount * 50);
+	if (damage > 450)
+	{
+		damage = 450;
+	}
+	return damage;
+}
+
+/// &ltsummary>
+/// Helper method to calculate the damage from the number of muscle groups a user has activated
+/// in the last 10 days
+/// &lt/summary>
+/// &ltparam name="allExercisesGrouped">All exercises the user has done in the past month grouped by muscle groups&lt/param>
+/// &ltreturns>&lt/returns>
+private int MuscleGroupDamage(ExercisesByMuscleGroup allExercisesGrouped)
+{ 
+	var muscleGroupCount = 0;
+	var AbCount = allExercisesGrouped.Abs.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (AbCount >= 1) ? 1 : 0;
+
+	var backCount = allExercisesGrouped.Back.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (backCount >= 1) ? 1 : 0;
+
+	var bicepsCount = allExercisesGrouped.Biceps.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (bicepsCount >= 1) ? 1 : 0;
+
+	var chestCount = allExercisesGrouped.Chest.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (chestCount >= 1) ? 1 : 0;
+
+	var legCount = allExercisesGrouped.Legs.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (legCount >= 1) ? 1 : 0;
+
+	var shouldersCount = allExercisesGrouped.Shoulders.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (shouldersCount >= 1) ? 1 : 0;
+
+	var tricepsCount = allExercisesGrouped.Triceps.Where(ex => DateTime.Parse(ex.Date) >= DateTime.Now.AddDays(-10)).Count();
+	muscleGroupCount += (tricepsCount >= 1) ? 1 : 0;
+
+	var damage = (muscleGroupCount * 150) - 150;
+	if (damage &lt 0)
+	{
+		damage = 0;
+	}
+	return damage;
+}
+</code>
+</pre>
+</div>
+<br/>
+<div style="width: 90%; margin: auto;">The code responsible for syncing a multiplayer party's attack against a boss monster. This code pulls from our database, calculates player damage, and notifies all other party members of attack contributions since last opening the "Party Mode" page</div>
+						<button type="button" class="collapsible">Party Mode Attack Code</button>
+						<div id="sample2" class="code-content">
+							<pre>
+								<code>
+userNumPath = Path.Combine(Application.persistentDataPath, "UserNum.json");
+
+//Define required objects
+StreamReader userSw = new StreamReader(userNumPath);
+queryInstance = new ExerciseQuery();
+
+//Obtain user's ID
+userNum = int.Parse(userSw.ReadToEnd());
+userName = queryInstance.GetName(userNum);
+
+var partyIdResults = queryInstance.GetSelfPartyID(userNum).Split(':');
+if(partyIdResults.Length > 1)
+	partyId = int.Parse(partyIdResults[1].Trim('}'));
+
+//Party did not exist
+if (partyId == 0)
+	return;
+
+// Next, load in the enemy's health saved in database
+var we = (queryInstance.GetPartyEnemy(partyId));
+var enemyData = JsonConvert.DeserializeObject<EnemyClass>(queryInstance.GetPartyEnemy(partyId));
+int enemyCurrentHealth;
+
+//Check if user is in party
+var inParty = queryInstance.GetSelfPartyID(userNum).Split('\n');
+
+// Check for the user's current party and modify display to match
+var party = JsonConvert.DeserializeObject<AllPartyMembers>(queryInstance.GetPartyUsers(userNum));
+
+if (enemyData == null)
+{
+	//Our enemy is null so we MUST create it
+	enemyCurrentHealth = 10000 * party.PartyMembers.Count;
+	//Set enemy health
+	queryInstance.SetPartyEnemy(partyId, 1, enemyCurrentHealth);
+
+	enemyData = JsonConvert.DeserializeObject<EnemyClass>(queryInstance.GetPartyEnemy(partyId));
+}
+
+var succeeded = Int32.TryParse(enemyData.EnemyHealth, out enemyCurrentHealth);
+
+// If the enemy is being loaded for the first time, or it has reached 0 health, reset the health
+if (!succeeded || enemyCurrentHealth <= 0)
+{
+	enemyCurrentHealth = 10000 * party.PartyMembers.Count;
+	//Set enemy health
+	queryInstance.SetPartyEnemy(partyId, 1, enemyCurrentHealth);
+}
+
+int maxHealth = 10000 * party.PartyMembers.Count;
+health.SetMaxHealth(maxHealth);
+health.SetHealth(enemyCurrentHealth);
+healthText.text = enemyCurrentHealth + "/" + maxHealth;
+
+// Dynamically display and name party members
+switch (party.PartyMembers.Count)
+{
+	case 1:
+		user1.SetActive(true);
+		heroName1.text = party.PartyMembers[0];
+		break;
+	case 2:
+		user1.SetActive(true);
+		heroName1.text = party.PartyMembers[0];
+		user2.SetActive(true);
+		heroName2.text = party.PartyMembers[1];
+		break;
+	case 3:
+		user1.SetActive(true);
+		heroName1.text = party.PartyMembers[0];
+		user2.SetActive(true);
+		heroName2.text = party.PartyMembers[1];
+		user3.SetActive(true);
+		heroName3.text = party.PartyMembers[2];
+		break;
+	case 4:
+		user1.SetActive(true);
+		heroName1.text = party.PartyMembers[0];
+		user2.SetActive(true);
+		heroName2.text = party.PartyMembers[1];
+		user3.SetActive(true);
+		heroName3.text = party.PartyMembers[2];
+		user4.SetActive(true);
+		heroName4.text = party.PartyMembers[3];
+		break;
+	default:
+		break;
+}
+
+// First, check if the user should do an attack
+
+// Compare locally stored date against most recent exercise date
+partyModeLastCheck = Path.Combine(Application.persistentDataPath, "PartyModeLastCheck.json");
+StreamWriter lastCheckinitSW = new StreamWriter(partyModeLastCheck, true);
+lastCheckinitSW.Write(""); // Needed to ensure the json path is stored in the local temp storage
+lastCheckinitSW.Close();
+
+StreamReader lastCheckReader = new StreamReader(partyModeLastCheck);
+var lastDateString = lastCheckReader.ReadToEnd();
+lastCheckReader.Close();
+
+if (lastDateString == "")
+{
+	lastCheckinitSW = new StreamWriter(partyModeLastCheck, true);
+	lastCheckinitSW.Write(new DateTime(1, 1, 1));
+	lastCheckinitSW.Close();
+}
+
+lastCheckReader = new StreamReader(partyModeLastCheck);
+lastDateString = lastCheckReader.ReadToEnd();
+Debug.Log(lastDateString);
+
+var lastDate = DateTime.Parse(lastDateString);
+lastCheckReader.Close();
+
+completedExercisepath = Path.Combine(Application.persistentDataPath, "LogExercise.json");
+StreamReader completedExerciseReader = new StreamReader(completedExercisepath);
+var locallyStoredExercies = completedExerciseReader.ReadToEnd();
+
+AllStoredExercises exercises;
+List<StoredExercises> exercisesToShow = new List<StoredExercises>();
+
+// No exercises have been logged yet.
+if (locallyStoredExercies != "")
+{
+	locallyStoredExercies = "{\"StoredExercises\":[" + locallyStoredExercies.Substring(1) + "]}"; // Adding JSON
+	exercises = JsonConvert.DeserializeObject<AllStoredExercises>(locallyStoredExercies);
+	exercisesToShow = exercises.StoredExercises.Where(workout => workout.DateCompleted > lastDate).ToList();
+	completedExerciseReader.Close();
+}
+
+// Perform damage calculations and update database
+if (exercisesToShow.Count > 0)
+{
+	var damage = CalculateDamage(lastDate);
+	string queryLog = "";
+
+	isAttacking = true;
+
+	queryLog = userName + " completed a workout for " + damage + " damage!\n\n";
+
+	foreach (var workout in exercisesToShow)
+	{
+		foreach (var exercise in workout.Exercises)
+		{
+			queryLog += attackLog.text + userName + " completed " + exercise.Reps * exercise.Sets + " " + exercise.ExerciseName + "s at " + exercise.Weight + " pounds!\n\n";
+		}
+	}
+
+	totalDamage = damage;
+	healthText.text = (enemyCurrentHealth - damage) + "/" + maxHealth;
+	dmg.Add(damage);
+
+	// Send party damage log
+	queryInstance.DoPartyDamage(partyId, userNum, totalDamage, queryLog, DateTime.Now);
+
+	// If the boss is dead, send defeated enemy message to party
+	if((enemyCurrentHealth - damage) <= 0)
+	{
+		queryInstance.DoPartyDamage(partyId, userNum, 0, userName + " defeated the enemy!!!", DateTime.Now);
+	}
+}
+
+// Check for updates from party members and display
+var partyActivitiesString = queryInstance.GetPartyDamageLog(partyId, lastDate);
+List<PartyExercise> partyActivities = new List<PartyExercise>();
+if (partyActivitiesString != "]")
+	partyActivities = JsonConvert.DeserializeObject<List<PartyExercise>>(partyActivitiesString);
+
+if (partyActivities.Count > 0)
+{
+	foreach (var activity in partyActivities)
+	{
+		int damage = int.Parse(activity.Damage);
+
+		attackLog.text = attackLog.text + activity.DamageString;
+	}
+
+	isAttacking = true;
+
+	// Remove the trailing newlines
+	attackLog.text = attackLog.text.TrimEnd('\n');
+	attackLog.text = attackLog.text.TrimEnd('\n');
+	var scroller = logContainer.GetComponent(typeof(ScrollRect)) as ScrollRect;
+	scroller.normalizedPosition = new Vector2(0, 1);
+}
+
+// Once all checks have been made for user attacks, update local storage date
+// and the database enemy health
+StreamWriter sw = new StreamWriter(partyModeLastCheck, false);
+sw.WriteLine(DateTime.Now);
+sw.Close();
+					</code>
+				</pre>
+			</div>
+			<br/>
+						Please email with requests for any additional code samples!
+					</p>
 						<h2>Try It Out</h2>
                         <p>
 							<a href="https://play.google.com/store/apps/details?id=com.HealthQuest.HealthQuest">
@@ -174,5 +602,38 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 
+			<script>
+				var coll = document.getElementsByClassName("collapsible");
+				var i;
+				for (i = 0; i < coll.length; i++) {
+					switch(i) {
+						case 0:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								var content = document.getElementById("sample1");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							
+							});
+							break;
+						case 1:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								debugger;
+								var content = document.getElementById("sample2");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							});
+							break;
+					}
+  				
+			}
+			</script>
 	</body>
 </html>

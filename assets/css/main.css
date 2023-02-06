@@ -3350,3 +3350,46 @@ input, select, textarea {
 #grad {
 	background-image: linear-gradient(#2B91C3, #FDF0D5);
   }
+
+/* Code Samples */
+pre code {
+	background-color: #eee;
+	/* border: 1px solid #999; */
+	display: block;
+	padding: 20px;
+	margin-left: auto;
+    margin-right: auto;
+	font-size: 0.7em;
+	width: 90%;
+  }
+
+  .collapsible {
+	display: block;
+	background-color: #777;
+	color: white;
+	cursor: pointer;
+	/*padding: 1em;*/
+	width: 90%;
+	border: none;
+	margin: auto;
+	text-align: center;
+	outline: none;
+	font-size: 0.70em;
+  }
+  
+  .active, .collapsible:hover {
+	background-color: #555;
+  }
+  
+  .code-content {
+	padding: 0 18px;
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.2s ease-out;
+	background-color: #f1f1f1;
+	width: 85%;
+	/*text-align: center;*/
+	margin: auto;
+
+  }
+  
