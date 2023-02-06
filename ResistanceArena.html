@@ -146,7 +146,214 @@
 						<br/>
 						<br/>
 						<h2>Code</h2>
-						See the code repository <a href="https://github.com/Mistah-Jones/ResistanceArena">HERE</a>
+						<p>
+							<div style="width: 90%; margin: auto;">The code that acts as the interface between user input and the machine learning Gesture Recognition code. This begins and ends gestures, parses the gesture recognition result, then creates the appropriate in-game attack with their respective physics components</div>
+							<button type="button" class="collapsible">Input Recognition Code</button>
+							<div id="sample1" class="code-content">
+								<pre>
+									<code>
+float trigger_left = Input.GetAxis("LeftControllerTrigger");
+float trigger_right = Input.GetAxis("RightControllerTrigger");
+
+GameObject hmd = GameObject.Find("VR Camera");
+Vector3 hmd_p = hmd.transform.position;
+Quaternion hmd_q = hmd.transform.rotation;
+
+// If the user presses either controller's trigger, we start a new gesture.
+if (trigger_pressed_left == false && trigger_left > 0.9)
+{
+	// Controller trigger pressed.
+	trigger_pressed_left = true;
+	gc.startStroke(Side_Left, hmd_p, hmd_q);
+	gesture_started = true;
+}
+if (trigger_pressed_right == false && trigger_right > 0.9)
+{
+	// Controller trigger pressed.
+	trigger_pressed_right = true;
+	gc.startStroke(Side_Right, hmd_p, hmd_q);
+	gesture_started = true;
+}
+if (gesture_started == false)
+{
+	// nothing to do.
+	return;
+}
+
+// If we arrive here, the user is currently dragging with one of the controllers.
+if (trigger_pressed_left == true)
+{
+	if (trigger_left < 0.85)
+	{
+		// User let go of a trigger and held controller still
+		gc.endStroke(Side_Left);
+		trigger_pressed_left = false;
+	}
+	else
+	{
+		// User still dragging or still moving after trigger pressed
+		GameObject left_hand = GameObject.Find("Left Hand");
+		gc.contdStrokeQ(Side_Left, left_hand.transform.position, left_hand.transform.rotation);
+		// Show the stroke by instatiating new objects
+		GameObject left_hand_pointer = GameObject.FindGameObjectWithTag("Left Pointer");
+	}
+}
+
+if (trigger_pressed_right == true)
+{
+	if (trigger_right < 0.85)
+	{
+		// User let go of a trigger and held controller still
+		gc.endStroke(Side_Right);
+		trigger_pressed_right = false;
+	}
+	else
+	{
+		// User still dragging or still moving after trigger pressed
+		GameObject right_hand = GameObject.Find("Right Hand");
+		gc.contdStrokeQ(Side_Right, right_hand.transform.position, right_hand.transform.rotation);
+
+		// Show the stroke by instatiating new objects
+		GameObject right_hand_pointer = GameObject.FindGameObjectWithTag("Right Pointer");
+	}
+}
+
+if (trigger_pressed_left || trigger_pressed_right)
+{
+	// User still dragging with either hand
+	return;
+}
+// else: if we arrive here, the user let go of both triggers, ending the gesture.
+gesture_started = false;
+
+double similarity = -1.0;
+
+int gestureId = gc.identifyGestureCombination(ref similarity);
+
+if (gestureId < 0)
+{
+	HUDText.text = "Failed to identify gesture";
+	return; // something went wrong
+}
+
+string gestureName = gc.getGestureCombinationName(gestureId);
+
+if (similarity < /*0.46*/0.3)
+{
+	HUDText.text = "Gesture not fully recognized\nWere you trying to perform a(n): " + gestureName + "?\nAccuracy Score: " + similarity;
+}
+else
+{
+	if (gestureName.Contains("bc"))
+	{
+		if (gestureName.Contains("left"))
+		{
+			HUDText.text = "You performed a left-handed bicep curl!";
+		}
+		else
+		{
+			HUDText.text = "You performed a right-handed bicep curl!";
+		}
+
+		bcStrike.transform.position = new Vector3
+			(
+				hmd_p.x + (hmd.transform.forward.x * 1.5f),
+				hmd_p.y + (hmd.transform.forward.y * 1.5f),
+				hmd_p.z + (hmd.transform.forward.z * 1.5f)
+			);
+		bcStrike.transform.rotation = hmd_q;
+		bcStrike.GetComponent<Rigidbody>().velocity = hmd.transform.forward * 6.5f;
+		bcStrike.GetComponent<Rigidbody>().angularVelocity = new Vector3();
+	}
+
+	if (gestureName.Contains("ohp"))
+	{
+		HUDText.text = "You performed an overhead press!";
+
+		ohpAttack.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+		ohpAttack.transform.position = new Vector3
+			(
+				hmd_p.x + (hmd.transform.forward.x * 1.5f),
+				hmd_p.y + (hmd.transform.forward.y * 1.5f),
+				hmd_p.z + (hmd.transform.forward.z * 1.5f)
+			);
+		ohpAttack.transform.rotation = hmd_q;
+		ohpAttack.GetComponent<Rigidbody>().velocity = new Vector3
+			(
+				hmd.transform.forward.x * 4.5f,
+				(hmd.transform.forward.y + 5f) * 2f,
+				hmd.transform.forward.z * 4.5f
+			);
+		ohpAttack.GetComponent<Rigidbody>().angularVelocity = new Vector3(1.5f, 1f, 0f);
+	}
+}
+									</code>
+								</pre>
+							</div>
+							<br/>
+							<div style="width: 90%; margin: auto;">The code for the bicep curl "Fireball" attack. This attack travels in a straight line where ever the user is facing and spawns at the hand that performed the bicep curl. The fireball immediately explodes on impact</div>
+							<button type="button" class="collapsible">Fireball Physics Code</button>
+							<div id="sample2" class="code-content">
+								<pre>
+									<code>
+public class BCStrike : MonoBehaviour
+{
+	public GameObject explosion;
+	void OnCollisionEnter(Collision collision)
+	{
+		// Place explosion Prefab on impact
+		var expl = Instantiate(explosion, gameObject.transform.position, new Quaternion());
+		Destroy(expl, 1.0f);
+
+		// Reset the strike's position
+		gameObject.transform.rotation = new Quaternion();
+		gameObject.transform.position = new Vector3(0, -100f, 0);
+		gameObject.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+	}
+}
+									</code>
+								</pre>
+							</div>
+							<br/>
+							<div style="width: 90%; margin: auto;">The code for the overhead press "Rock Throw" attack. This attack hurls a rock into the air in whatever direction the user is facing. This rock falls until it hits the ground and spawns a large area of effect force wave destroying anything in it</div>
+							<button type="button" class="collapsible">Rock Throw Physics Code</button>
+							<div id="sample3" class="code-content">
+								<pre>
+									<code>
+public class OHPAttack : MonoBehaviour
+{
+	public GameObject shockWave;
+	public GameObject shockWaveHitBox;
+
+	void OnCollisionEnter(Collision collision)
+	{
+		// Only handle collisions at ground level AND don't handle collisions with the hitbox
+		if (gameObject.transform.position.y < 0.8 && !collision.gameObject.name.Equals("ShockwaveCollision(Clone)"))
+		{
+			// Place impact effects
+			var swPos = new Vector3
+				(
+					gameObject.transform.position.x,
+					0.0f,
+					gameObject.transform.position.z
+				);
+
+			var sw = Instantiate(shockWave, swPos, new Quaternion());
+			Destroy(sw, 1.0f);
+			var swHit = Instantiate(shockWaveHitBox, swPos, new Quaternion());
+			Destroy(swHit, 1.0f);
+
+			// Freeze rock in place to simulate "landing"
+			gameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+		}
+	}
+}
+									</code>
+								</pre>
+							</div>
+							<br/>
+							<div style="width: 90%; margin: auto;">See the code repository <a href="https://github.com/Mistah-Jones/ResistanceArena">HERE</a></div>
+						</p>
 						</div>
 					</div>
 
@@ -183,5 +390,50 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 
+			<script>
+				var coll = document.getElementsByClassName("collapsible");
+				var i;
+				for (i = 0; i < coll.length; i++) {
+					switch(i) {
+						case 0:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								var content = document.getElementById("sample1");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							
+							});
+							break;
+						case 1:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								debugger;
+								var content = document.getElementById("sample2");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							});
+							break;
+						case 2:
+						coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								debugger;
+								var content = document.getElementById("sample3");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							});
+							break;
+					}
+  				
+			}
+			</script>
 	</body>
 </html>
