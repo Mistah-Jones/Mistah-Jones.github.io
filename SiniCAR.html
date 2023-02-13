@@ -56,16 +56,23 @@
 							<li>Game Developer</li>
 							<li>Game Designer</li>
 							<li>Unity Instructor</li>
-							I was the only engineer on this team, and there was no dedicated game designer for this project, so I ended up "wearing many hats"
-							for this project. I was the only person on the project who had used Unity or Source Control software, so I dedicated time to
-							teaching the team's artists and producer what they needed to know.
+							<br/>
+							&nbsp &nbsp I was the only engineer on this team, and worked with the team's producer on the game design. I was the only 
+							person on the project who had used Unity or Source Control software, so I dedicated time to teaching the team's artists 
+							and producer what they needed to know.
+							<br/>
+							&nbsp &nbsp It was a very interesting design challenge to recreate an existing arcade game while also adding a personal
+							flair to make the game our own. After play testing and trying a few different mechanics, we came to the conclusion that 
+							removing all enemies except the boss and adding a fuel system helped to reduce the difficultly while still keeping gameplay
+							interesting until the boss spawns. This was much more engaging and allowed players of lower skill levels to be able to quickly
+							pick up the game and understand the basic systems in place.
 						</p>
 						<h2>Media</h2>
 						<h3>&nbsp Screenshots</h3>
 						<section class="tiles" style="margin-top: -6em;">
 							<article class="style4" style="width: 25em;">
 								<span class="image">
-									<img src="images/SC_Firing.png" alt=""/>
+									<img src="images/SC_CartCollect.png" alt=""/>
 								</span>
 								<a>
 									<div class="content">
@@ -125,6 +132,207 @@
 						<br/>
 						<h2>Code</h2>
 						<p>
+							<div style="width: 90%; margin: auto;">
+								The code that handles all player inputs. This had to create the same feel as the original SiniStar arcade game, 
+								and utilized unique ship physics and movement not typically used in space arcade games. These values had to be
+								tweaked purely based on game feel during play testing and comparing to the original. It also includes handling
+								the case when a user runs low on fuel.
+							</div>
+							<button type="button" class="collapsible">Player Movement Code</button>
+							<div id="sample1" class="code-content">
+								<pre>
+									<code>
+if (fuelAmount <= 25)
+{
+	speedReduction = lowFuelSpeedReduction;
+}
+else
+{
+	speedReduction = 1.0f;
+}
+// Loop around if the player hits the max distance
+if (transform.position.x > MapManager.xMax)
+{
+	var loopedPosition = new Vector3(-MapManager.xMax, transform.position.y, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.x < -MapManager.xMax)
+{
+	var loopedPosition = new Vector3(MapManager.xMax, transform.position.y, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.y > MapManager.yMax)
+{
+	var loopedPosition = new Vector3(transform.position.x, -MapManager.yMax, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.y < -MapManager.yMax)
+{
+	var loopedPosition = new Vector3(transform.position.x, MapManager.yMax, transform.position.z);
+	transform.position = loopedPosition;
+}
+
+if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+{
+	// Facing NW
+	RotateOrApplyForce(45f);
+}
+else if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+{
+	// Facing NE
+	RotateOrApplyForce(315f);
+}
+else if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+{
+	// Facing SW
+	RotateOrApplyForce(135f);
+}
+else if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+{
+	// Facing SW
+	RotateOrApplyForce(225f);
+}
+else if (Input.GetKey(KeyCode.W))
+{
+	// Facing N
+	RotateOrApplyForce(0f);
+}
+else if (Input.GetKey(KeyCode.S))
+{
+	// Facing S
+	RotateOrApplyForce(180f);
+}
+else if (Input.GetKey(KeyCode.A))
+{
+	// Facing W
+	RotateOrApplyForce(90f);
+}
+else if (Input.GetKey(KeyCode.D))
+{
+	// Facing E
+	RotateOrApplyForce(270f);
+}
+
+...
+
+/// &ltsummary>
+/// Helper method that will compare the player's current angle with a desired angle 
+/// of movement. If the player is facing that angle they will move in that direction,
+/// if not they will rotate to that position.
+/// &lt/summary>
+/// &ltparam name="desiredAngle">&lt/param>
+void RotateOrApplyForce(float desiredAngle)
+{
+	var playerComponent = GetComponent&ltRigidbody>();
+	var zRotation = playerComponent.transform.localRotation.eulerAngles.z;
+	bool isAngleWest = desiredAngle < 180f;
+
+	// Within margin of error, snap to the correct axis and begin applying force
+	if ((zRotation <= desiredAngle + marginOfError) && (zRotation >= desiredAngle - marginOfError))
+	{
+		transform.rotation = Quaternion.Euler(0f, 0f, desiredAngle);
+
+		GetComponent&ltRigidbody>().AddForce(transform.up * movementSpeed * speedReduction * Time.deltaTime);
+		DrainFuel();
+	}
+	// The button was pressed but the player needs to rotate before applying force
+	else
+	{
+		// If the angle is < 180 different math is applied
+		if (isAngleWest)
+		{
+			if (zRotation > (desiredAngle + 1.0f) && zRotation <= (desiredAngle + 180.0f))
+			{
+				transform.Rotate(-transform.forward * rotationSpeed * Time.deltaTime);
+			}
+			else
+			{
+				transform.Rotate(transform.forward * rotationSpeed * Time.deltaTime);
+			}
+		}
+		else
+		{
+			if (zRotation >= (desiredAngle + 180.0f) % 360 && zRotation < (desiredAngle - 1.0f))
+			{
+				transform.Rotate(transform.forward * rotationSpeed * Time.deltaTime);
+			}
+			else
+			{
+				transform.Rotate(-transform.forward * rotationSpeed * Time.deltaTime);
+			}
+		}
+	}
+}
+									</code>
+								</pre>
+							</div>
+							<br/>
+							<div style="width: 90%; margin: auto;">
+								The boss's AI movement. This was the part of the game that had the most iteration. The boss takes many hits,
+								while he kills the player in only one hit; it needed to be carefully designed and balanced to not be unfair 
+								or frustrating to fight against. The movement began with a simple algorithm to move towards the player, and 
+								eventually evolved into a chase where once the boss is close enough he begins rotating around the player 
+								with an orbital decay to slowly encroach on the player. This system felt more fair while also creating a
+								great deal of tension once the boss was close enough to be seen. 
+							</div>
+							<button type="button" class="collapsible">Boss AI and Movement Code</button>
+							<div id="sample2" class="code-content">
+								<pre>
+									<code>
+// Loop around if the boss hits the max distance
+if (transform.position.x > MapManager.xMax)
+{
+	var loopedPosition = new Vector3(-MapManager.xMax, transform.position.y, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.x < -MapManager.xMax)
+{
+	var loopedPosition = new Vector3(MapManager.xMax, transform.position.y, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.y > MapManager.yMax)
+{
+	var loopedPosition = new Vector3(transform.position.x, -MapManager.yMax, transform.position.z);
+	transform.position = loopedPosition;
+}
+if (transform.position.y < -MapManager.yMax)
+{
+	var loopedPosition = new Vector3(transform.position.x, MapManager.yMax, transform.position.z);
+	transform.position = loopedPosition;
+}
+
+if (player != null)
+{
+	var distance = Vector3.Distance(transform.position, player.transform.position);
+
+	if (distance > rotationDistance)
+	{
+		transform.position = Vector3.MoveTowards(transform.position, player.transform.position, Time.deltaTime * speed);
+		if (currRotationDistance < rotationDistance)
+		{
+			// How close The Biker orbits decreases the longer you are away from him
+			currRotationDistance += rotationalDecay;
+			if (currRotationDistance >= rotationDistance)
+			{
+				currRotationDistance = rotationDistance;
+			}
+		}
+	}
+	else
+	{
+		transform.RotateAround(player.transform.position, new Vector3(0, 0, 1), rotationSpeed * Time.deltaTime);
+		var desiredPosition = (transform.position - player.transform.position).normalized * currRotationDistance + player.transform.position;
+		transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
+		currRotationDistance -= rotationalDecay;
+
+		// Make sure the bike is facing upright
+		transform.rotation = new Quaternion(0, 0, 0, 0);
+	}
+}		
+									</code>
+								</pre>
+							</div>
+							<br/>
 							See the code repository <a href="https://gitlab.com/Mistah_Jones/rapidprototype1">HERE</a>
 						</p>
 						<h2>Try it out</h2>
@@ -169,6 +377,39 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+			<script>
+				var coll = document.getElementsByClassName("collapsible");
+				var i;
+				for (i = 0; i < coll.length; i++) {
+					switch(i) {
+						case 0:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								var content = document.getElementById("sample1");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							
+							});
+							break;
+						case 1:
+							coll[i].addEventListener("click", function() {
+								this.classList.toggle("active");
+								debugger;
+								var content = document.getElementById("sample2");
+								if (content.style.maxHeight){
+									content.style.maxHeight = null;
+								} else {
+									content.style.maxHeight = content.scrollHeight + "px";
+								}
+							});
+							break;
+					}
+  				
+			}
+			</script>
 
 	</body>
 </html>
