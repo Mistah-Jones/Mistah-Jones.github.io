@@ -55,8 +55,14 @@
 						<h2>My Role</h2>
 						<p>
 							<li>Sole Developer</li>
-							This project required a very strong understanding of 3D math for creating realistic physics-based gameplay
-							with a VR headset. This required the use of quaternion math, physics, and matrix transformations between spaces
+							<br/>
+							&nbsp &nbsp This project required a very strong understanding of 3D math for creating realistic physics-based gameplay
+							with a VR headset - quaternion math, physics, and matrix transformations between spaces were all utilized to make
+							the game experience. This was the most hands-on gameplay development experience I have had due to the nature of the machine learning,
+							I needed to train the AI by performing the upper body exercises correctly hundreds of times then developing and attaching abilities to the gestures to
+							see how it felt in the game. There were many iterations and I quickly learned the importance of game feel and play testing to really
+							make a game experience that players will be engaged with. It also posed the additional gameplay and design challenge of making a traditionally
+							difficult or sometimes unenjoyable activity (exercising) fun for the player.
 						</p>
 						<h2>Media</h2>
 						<h3>&nbsp Screenshots</h3>
@@ -147,7 +153,14 @@
 						<br/>
 						<h2>Code</h2>
 						<p>
-							<div style="width: 90%; margin: auto;">The code that acts as the interface between user input and the machine learning Gesture Recognition code. This begins and ends gestures, parses the gesture recognition result, then creates the appropriate in-game attack with their respective physics components</div>
+							<div style="width: 90%; margin: auto;">
+								The code that acts as the interface between user input and the machine learning Gesture Recognition code. This begins 
+								and ends gestures, parses the gesture recognition result, then creates the appropriate in-game attack with their respective 
+								physics components. This is the conduit through which all abilities must pass, so this code needed to be the most stable,
+								refined, and have the most carefully tweaked values. The thresholds for gesture recognition and correctness came from many hours of play testing
+								and having people of different sizes playing the game to come to the final values that allowed for the most accessibility while still 
+								keeping the gesture recognition robust enough to require reasonable form when performing exercises.
+						</div>
 							<button type="button" class="collapsible">Input Recognition Code</button>
 							<div id="sample1" class="code-content">
 								<pre>
@@ -291,7 +304,12 @@ else
 								</pre>
 							</div>
 							<br/>
-							<div style="width: 90%; margin: auto;">The code for the bicep curl "Fireball" attack. This attack travels in a straight line where ever the user is facing and spawns at the hand that performed the bicep curl. The fireball immediately explodes on impact</div>
+							<div style="width: 90%; margin: auto;">
+								The code for the bicep curl "Fireball" attack. This attack travels in a straight line where ever the user
+								 is facing and spawns at the hand that performed the bicep curl. The fireball immediately explodes on impact.
+								 This attack is meant to feel quick, efficient, and easy to understand; this is accomplished with its clear projectile
+								 path and fast travel speed.
+							</div>
 							<button type="button" class="collapsible">Fireball Physics Code</button>
 							<div id="sample2" class="code-content">
 								<pre>
@@ -315,7 +333,12 @@ public class BCStrike : MonoBehaviour
 								</pre>
 							</div>
 							<br/>
-							<div style="width: 90%; margin: auto;">The code for the overhead press "Rock Throw" attack. This attack hurls a rock into the air in whatever direction the user is facing. This rock falls until it hits the ground and spawns a large area of effect force wave destroying anything in it</div>
+							<div style="width: 90%; margin: auto;">
+								The code for the overhead press "Rock Throw" attack. This attack hurls a rock into the air in whatever direction 
+								the user is facing. This rock falls until it hits the ground and spawns a large area of effect force wave destroying 
+								anything in it. This attack is meant to feel strong, bulky, and somewhat unwieldy; this is accomplished with its slow
+								speed, large arc, and the fact that it breaks through any objects on its intended path.
+						</div>
 							<button type="button" class="collapsible">Rock Throw Physics Code</button>
 							<div id="sample3" class="code-content">
 								<pre>
