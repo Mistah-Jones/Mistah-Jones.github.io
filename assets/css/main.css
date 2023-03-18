@@ -102,7 +102,7 @@ input, select, textarea {
 
 	body {
 		background: #FFFFFF;
-		background-image: linear-gradient(#BBA2BD, #FFFFFF);
+		background-image: linear-gradient(#8a808b, #ffffff);
 	}
 
 		body.is-preload *, body.is-preload *:before, body.is-preload *:after {
@@ -154,7 +154,7 @@ input, select, textarea {
 
 		a:hover {
 			border-bottom-color: transparent;
-			color: #f2849e !important;
+			color: #e41444 !important;
 		}
 
 	strong, b {
